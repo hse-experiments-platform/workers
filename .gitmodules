@@ -1,0 +1,6 @@
+[submodule "dataset-operations-library"]
+	path = dataset-operations-library
+	url = https://github.com/hse-experiments-platform/dataset-operations-library
+[submodule "models_storage"]
+	path = models_storage
+	url = https://github.com/hse-experiments-platform/models-storage
