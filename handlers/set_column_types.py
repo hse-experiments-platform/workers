@@ -47,15 +47,15 @@ def set_column_types(req: PreprocessRequest):
             af = schema.AggregateFunction(settings.empties_settings.aggregate_function)
 
         m[column] = preprocess.DatasetPreprocessingSettings(
-            column_type=settings.column_type,
+            column_type=schema.AcceptedType(settings.column_type),
             empties_settings=schema.EmptiesStrategy(
                 technique=schema.ProcessingMode(settings.empties_settings.technique),
                 constant_value=settings.empties_settings.constant_value,
                 aggregate_function=af)
         )
 
-        if m[column].empties_settings.technique == schema.ProcessingMode.FillWithConstant and \
-                m[column].column_type not in ['dropped', 'string']:
+        if m[column].empties_settings.technique == schema.ProcessingMode.Constant and \
+                m[column].column_type not in [preprocess.AcceptedType.Dropped, preprocess.AcceptedType.Categorial]:
             m[column].empties_settings.constant_value = float(m[column].empties_settings.constant_value)
 
 
