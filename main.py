@@ -1,17 +1,17 @@
+import logging
+import os
 import typing
-import io
+
+import fastapi
+from starlette.middleware import base
 
 from handlers import train, predict, preprocess as prep, upload, set_column_types as set_types
 from lib import minio
-from models_storage.logreg.model import LogRegression
-from models_storage.linreg.model import LinearRegression
 
-from minio import Minio
 import ray
 import pandas as pd
-import mlflow
+from dotenv import load_dotenv
 
-from fastapi import FastAPI
 from starlette import status
 from starlette.responses import Response
 
@@ -35,9 +35,11 @@ def with_dataframe_in_first_arg(
     return func(df, *args)
 
 
-ray.init(ignore_reinit_error=True)
-mlflow.set_tracking_uri('http://127.0.0.1:5500')
-app = FastAPI()
+load_dotenv(os.environ.get("DOTENV_FILE"))
+# mlflow.set_tracking_uri('http://127.0.0.1:5500')
+print(dict(os.environ))
+ray.init(ignore_reinit_error=True, runtime_env={"env_vars": dict(os.environ)})
+app = fastapi.FastAPI()
 
 
 @app.post('/train')
@@ -58,6 +60,7 @@ async def train_handler(*, body: train.TrainRequest):
     try:
         resp = ray.get(res)
     except Exception as e:
+        print(e)
         return Response(content=f'error during executing train, error={e}',
                         status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -72,6 +75,7 @@ async def predict_handler(*, body: predict.PredictRequest):
     try:
         resp = ray.get(res)
     except Exception as e:
+        print(e)
         return Response(content=f'error during executing predict, error={e}',
                         status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -86,6 +90,7 @@ async def preprocess_handler(*, body: prep.PreprocessRequest):
     try:
         resp = ray.get(res)
     except Exception as e:
+        print(e)
         return Response(content=f'error during executing preprocess, error={e}',
                         status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -99,6 +104,7 @@ async def upload_handler(*, body: upload.UploadRequest):
     try:
         resp = ray.get(res)
     except Exception as e:
+        print(e)
         return Response(content=f'error during executing upload, error={e}',
                         status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -112,6 +118,7 @@ async def set_column_types(*, body: set_types.PreprocessRequest):
     try:
         resp = ray.get(res)
     except Exception as e:
+        print(e)
         return Response(content=f'error during executing upload, error={e}',
                         status_code=status.HTTP_400_BAD_REQUEST)
 

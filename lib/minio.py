@@ -21,21 +21,17 @@ class MinioClient(metaclass=MetaSingleton):
             self.client = get_minio_client()
         return self.client
 
+
 def get_minio_client() -> Minio:
     endpoint, access_key, secret_key = os.environ.get("MINIO_ENDPOINT"), os.environ.get(
         "MINIO_ACCESS_KEY"), os.environ.get("MINIO_SECRET_KEY")
-    if endpoint and access_key and secret_key:
-        return Minio(endpoint,
-                     access_key=access_key,
-                     secret_key=secret_key,
-                     secure=False
-                     )
-    else:
-        return Minio("localhost:9000",
-                     access_key="ROOTNAME",
-                     secret_key="CHANGEME123",
-                     secure=False
-                     )
+    print(os.environ.keys())
+    print(endpoint, access_key, secret_key)
+    return Minio(endpoint,
+                 access_key=access_key,
+                 secret_key=secret_key,
+                 secure=False
+                 )
 
 
 def get_s3_object_file(client: Minio, bucket: str, object: str, filename: str = None) -> str:
