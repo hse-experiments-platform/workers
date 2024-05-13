@@ -8,6 +8,11 @@ from lib.minio import MinioClient
 
 
 def upload_to_s3(client: Minio, user_id: str, dataset_id: str, filepath: str):
+    # check if bucket exists
+    found = client.bucket_exists(user_id)
+    if not found:
+        client.make_bucket(user_id)
+
     client.fput_object(user_id, f"{dataset_id}.csv", filepath)
 
 
