@@ -15,7 +15,7 @@ services:
       - DOTENV_FILE=configs/dev/.env
       - DB_CONNECT_STRING=postgres://hseuser:P%40ssw0rd@datasetsdb:5432/datasetsdb
     ports:
-      - "8000:8000"
+      - "8100:8100"
     networks:
       - auth_hse-net
 

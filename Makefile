@@ -2,7 +2,7 @@ CONFIGS_PATH=./configs
 
 .PHONY: run
 run:
-	DOTENV_FILE=$(CONFIGS_PATH)/dev/.env LOG_LEVEL=DEBUG uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+	DOTENV_FILE=$(CONFIGS_PATH)/dev/.env LOG_LEVEL=DEBUG uvicorn main:app --host 0.0.0.0 --port 8100 --reload
 
 .PHONY: docker-build
 docker-build:
