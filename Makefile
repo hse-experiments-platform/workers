@@ -15,3 +15,7 @@ docker-run:
 .PHONY: docker-run
 docker-run-background:
 	docker compose -f deployments/dev/docker-compose.yaml up --build -d
+
+.PHONY: start-infra
+start-infra:
+	docker compose -f deployments/dev/docker-compose.yaml up mlflow-db create_buckets mlflow-tracking

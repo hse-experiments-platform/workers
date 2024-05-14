@@ -7,7 +7,7 @@ COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 RUN apt update
-RUN apt install postgresql-client
+RUN apt install -y postgresql-client
 
 
 COPY . .

@@ -3,7 +3,10 @@ import os
 import typing
 
 import fastapi
-from starlette.middleware import base
+import mlflow
+
+from models_storage.logreg.model import LogRegression
+from models_storage.linreg.model import LinearRegression
 
 from handlers import train, predict, preprocess as prep, upload, set_column_types as set_types
 from lib import minio
@@ -36,8 +39,7 @@ def with_dataframe_in_first_arg(
 
 
 load_dotenv(os.environ.get("DOTENV_FILE"))
-# mlflow.set_tracking_uri('http://127.0.0.1:5500')
-print(dict(os.environ))
+# mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI"))
 ray.init(ignore_reinit_error=True, runtime_env={"env_vars": dict(os.environ)})
 app = fastapi.FastAPI()
 
@@ -53,9 +55,7 @@ async def train_handler(*, body: train.TrainRequest):
                         status_code=status.HTTP_400_BAD_REQUEST)
 
     # вернуть body.dataset_id
-    res = ray_wrapper_deprecated.remote(train.train, body.user_id, '36', model,
-                                        body.hyperparameters, body.metrics,
-                                        body.train_params, body.target_col)
+    res = ray_wrapper.remote(train.train, model, body)
 
     try:
         resp = ray.get(res)

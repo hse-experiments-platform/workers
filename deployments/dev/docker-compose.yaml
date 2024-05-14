@@ -7,17 +7,88 @@ services:
     build:
       context: ../../
       dockerfile: build/Dockerfile
-#      shm_size: '4gb'
     tmpfs:
       - /dev/shm:rw,noexec,nosuid,size=4g
+    depends_on:
+      mlflow-tracking:
+        condition: service_healthy
     environment:
       - MINIO_ENDPOINT=minio:9000
       - DOTENV_FILE=configs/dev/.env
       - DB_CONNECT_STRING=postgres://hseuser:P%40ssw0rd@datasetsdb:5432/datasetsdb
+      - MLFLOW_TRACKING_URI=http://mlflow-tracking:5501
+      - AWS_ACCESS_KEY_ID=hse_minio_user
+      - AWS_SECRET_ACCESS_KEY=hse_minio_password
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
     ports:
       - "8100:8100"
     networks:
       - auth_hse-net
+
+  # mlflow database
+  mlflow-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: mlflowuser
+      POSTGRES_PASSWORD: mlflowpassword
+      POSTGRES_DB: mlflowdb
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U mlflowuser -d mlflowdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "6444:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    networks:
+      - auth_hse-net
+  
+  create_buckets:
+    image: minio/mc:latest
+    networks:
+      - auth_hse-net
+    entrypoint: >
+      bash -c "
+      /usr/bin/mc config host add minio http://minio:9000 hse_minio_user hse_minio_password;
+      if ! mc ls minio | grep --quiet mlflow; then
+        mc mb minio/mlflow
+      else
+        echo 'bucket already exists'
+      fi;
+      exit 0;
+      "
+
+  mlflow-tracking:
+    build:
+      context: ../../
+      dockerfile: build/mlflow-tracking/Dockerfile
+    depends_on:
+      mlflow-db:
+          condition: service_healthy
+      create_buckets:
+          condition: service_completed_successfully
+    ports:
+      - "5501:5501"
+    environment:
+      - AWS_ACCESS_KEY_ID=hse_minio_user
+      - AWS_SECRET_ACCESS_KEY=hse_minio_password
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+    command: >
+      mlflow server 
+      --backend-store-uri postgresql://mlflowuser:mlflowpassword@mlflow-db:5432/mlflowdb
+      --host 0.0.0.0
+      --default-artifact-root s3://mlflow/
+      --port 5501
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5501/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - auth_hse-net
+
 
 networks:
   auth_hse-net:
