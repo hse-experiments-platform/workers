@@ -69,8 +69,7 @@ async def train_handler(*, body: train.TrainRequest):
 
 @app.post('/predict')
 async def predict_handler(*, body: predict.PredictRequest):
-    res = ray_wrapper_deprecated.remote(predict.predict, body.user_id, body.dataset_id, body.training_run_id,
-                                        body.user_id)
+    res = ray_wrapper.remote(predict.predict, body)
 
     try:
         resp = ray.get(res)

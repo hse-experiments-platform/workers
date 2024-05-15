@@ -41,7 +41,6 @@ def train(base_model: sklearn.base.BaseEstimator, req: TrainRequest):
 
 def do_train(df: pd.DataFrame, base_model, hyperparams: typing.Dict[str, typing.Any], metrics: typing.List[str],
              train_params: TrainParams, target: str, user_id: str, dataset_id: str, launch_id: str):
-    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI"))
     mlflow.set_experiment(f"{user_id}_dataset-{dataset_id}_training")
     with mlflow.start_run(run_name=f"dataset_training_{launch_id}") as run:
         random.seed = 0
