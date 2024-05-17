@@ -5,10 +5,11 @@ import typing
 import fastapi
 import mlflow
 
+from dataset_operations_library.transformation import schema
 from models_storage.logreg.model import LogRegression
 from models_storage.linreg.model import LinearRegression
 
-from handlers import train, predict, preprocess as prep, upload, set_column_types as set_types
+from handlers import train, predict, transform as prep, upload, set_column_types as set_types, transform
 from lib import minio
 
 import ray
@@ -81,16 +82,15 @@ async def predict_handler(*, body: predict.PredictRequest):
     return Response(content=resp, status_code=status.HTTP_200_OK)
 
 
-@app.post('/preprocess')
-async def preprocess_handler(*, body: prep.PreprocessRequest):
-    res = ray_wrapper_deprecated.remote(prep.preprocess, body.user_id, body.dataset_id, body.schema, body.user_id,
-                                        body.dataset_id)
+@app.post('/transform')
+async def transform_handler(*, body: transform.TransformRequest):
+    res = ray_wrapper.remote(transform.transform, body)
 
     try:
         resp = ray.get(res)
     except Exception as e:
         print(e)
-        return Response(content=f'error during executing preprocess, error={e}',
+        return Response(content=f'error during executing upload, error={e}',
                         status_code=status.HTTP_400_BAD_REQUEST)
 
     return Response(content=resp, status_code=status.HTTP_200_OK)
